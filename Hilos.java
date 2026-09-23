@@ -1,19 +1,19 @@
 
 /**
- * Write a description of class Cynthia here.
+ * Write a description of class Hilos here.
  * 
  * @author (your name) 
  * @version (a version number or a date)
  */
-public class Cynthia
+public class Hilos
 {
     // instance variables - replace the example below with your own
     private int x;
 
     /**
-     * Constructor for objects of class Cynthia
+     * Constructor for objects of class Hilos
      */
-    public Cynthia()
+    public Hilos()
     {
         // initialise instance variables
         x = 0;

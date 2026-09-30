@@ -61,8 +61,8 @@ public class Kernel {
         if (usuarioActual != null){
         usuarioActual = null;
     }
-    }
-
+}
+    
     public void setEncendido(boolean e) {
         this.encendido = e;
     }
@@ -79,6 +79,10 @@ public class Kernel {
         return usuarioActual;
     }
 
+    public void setUsuario(String u){
+        this.usuario=u;
+    }
+    
     public String getUsuario() {
         return usuario;
     }

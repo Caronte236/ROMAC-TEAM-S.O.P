@@ -18,6 +18,5 @@ public class Bios{
     public String checarDispositivos(){
         return dispositivos;
     }
-    
-    
+
 }

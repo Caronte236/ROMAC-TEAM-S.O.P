@@ -1,11 +1,11 @@
-public class SJFe {
+public class SJFE {
 
     private AdministradorProcesos administrador;
 
     private int tiempo;
     private String gantt;
 
-    public SJFe(AdministradorProcesos a) {
+    public SJFE(AdministradorProcesos a) {
 
         administrador = a;
         tiempo = 0;
@@ -16,15 +16,15 @@ public class SJFe {
     // BUSCAR PROCESO MÁS CORTO
     // -----------------------------
 
-    private proceso buscarMasCorto() {
+    private Proceso buscarMasCorto() {
 
-        proceso elegido = null;
+        Proceso elegido = null;
 
         for (int i = 0; i < administrador.getCantidad(); i++) {
 
-            proceso p = administrador.getProceso(i);
+            Proceso p = administrador.getProceso(i);
 
-            if (p.getEstado() == proceso.estado.listo
+            if (p.getEstado() == Proceso.estado.listo
                     && p.getRestante() > 0) {
 
                 if (elegido == null) {
@@ -52,9 +52,9 @@ public class SJFe {
              i < administrador.getCantidad();
              i++) {
 
-            proceso p = administrador.getProceso(i);
+            Proceso p = administrador.getProceso(i);
 
-            if (p.getEstado() == proceso.estado.nuevo
+            if (p.getEstado() == Proceso.estado.nuevo
                     && p.getLlegada() <= tiempo) {
 
                 p.pasarAListo(tiempo);
@@ -68,7 +68,7 @@ public class SJFe {
 
     public void ejecutar() {
 
-        proceso actual = null;
+        Proceso actual = null;
 
         int terminados = 0;
 
@@ -84,7 +84,7 @@ public class SJFe {
             admitirProcesos();
 
             // Buscar proceso más corto
-            proceso candidato = buscarMasCorto();
+            Proceso candidato = buscarMasCorto();
 
             // ---------------------------------
             // SI NO HAY PROCESOS LISTOS
@@ -202,17 +202,16 @@ public class SJFe {
 
         double esperaPromedio = 0;
         double retornoPromedio = 0;
-        double respuestaPromedio = 0;
 
         resultado += "\nRESULTADOS DE SJF\n\n";
 
-        resultado += "PID\tLlegada\tRáfaga\tFin\tEspera\tRetorno\tRespuesta\n";
+        resultado += "PID\tLlegada\tRáfaga\tFin\tEspera\tRetorno\t \n";
 
         for (int i = 0;
              i < administrador.getCantidad();
              i++) {
 
-            proceso p = administrador.getProceso(i);
+            Proceso p = administrador.getProceso(i);
 
             resultado += "P" + p.getPID()
                     + "\t"
@@ -226,12 +225,11 @@ public class SJFe {
                     + "\t"
                     + p.getRetorno()
                     + "\t"
-                    + p.getRespuesta()
                     + "\n";
 
             esperaPromedio += p.getEspera();
             retornoPromedio += p.getRetorno();
-            respuestaPromedio += p.getRespuesta();
+           
         }
 
         int n = administrador.getCantidad();
@@ -240,7 +238,6 @@ public class SJFe {
 
             esperaPromedio /= n;
             retornoPromedio /= n;
-            respuestaPromedio /= n;
         }
 
         resultado += "\nPromedio de espera: "
@@ -248,9 +245,6 @@ public class SJFe {
 
         resultado += "\nPromedio de retorno: "
                 + retornoPromedio;
-
-        resultado += "\nPromedio de respuesta: "
-                + respuestaPromedio;
 
         return resultado;
     }

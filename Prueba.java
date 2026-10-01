@@ -6,7 +6,7 @@ public class Prueba {
 
         Scanner sc = new Scanner(System.in);
         Bios bios = new Bios();
-        sistemaOperativo so = new sistemaOperativo("ROMAC", "1.0");
+        sistemaOperativo so = new sistemaOperativo("ROMAC", "2.0");
         Kernel kernel = new Kernel();
         Memoria memoria = new Memoria(1000, 50);
 
@@ -36,7 +36,7 @@ public class Prueba {
                 new AdministradorProcesos(10);
 
         // ==========================================
-        // CREAR PROCESOS INICIALES
+        // CREAR PROCESOS
         // ==========================================
         //
         // Proceso | Llegada | Ráfaga
@@ -47,10 +47,21 @@ public class Prueba {
         //
         // ==========================================
 
-        administrador.crearProceso("P1", false, 0, 7);
-        administrador.crearProceso("P2", false, 2, 4);
-        administrador.crearProceso("P3", false, 4, 1);
-        administrador.crearProceso("P4", false, 5, 4);
+        Proceso p1 = administrador.crearProceso(
+                "P1", false, 0, 7
+        );
+
+        Proceso p2 = administrador.crearProceso(
+                "P2", false, 2, 4
+        );
+
+        Proceso p3 = administrador.crearProceso(
+                "P3", false, 4, 1
+        );
+
+        Proceso p4 = administrador.crearProceso(
+                "P4", false, 5, 4
+        );
 
         // ==========================================
         // CREAR USUARIO (como en Kernel.main)
@@ -146,16 +157,16 @@ public class Prueba {
             help          - Mostrar comandos
             informacion   - Información del sistema
             usuario       - Usuario actual
-            procesos      - Administrador de tareas
-            crear         - Crear un nuevo proceso
-            eliminar      - Eliminar un proceso por PID
+            procesos      - Lista de procesos activos
+            crear_proc    - Crea un nuevo proceso
+            eliminar_proc - Elimina un proceso por PID
             sjf           - Ejecutar planificador SJF expropiativo
             memoria       - Información de memoria
             archivos      - Sistema de archivos
-            cerrar        - Cerrar sesión
-            apagar        - Apagar sistema
             cmuser        - Cambiar nombre de usuario
             cmpass        - Cambiar password
+            cerrar        - Cerrar sesión
+            apagar        - Apagar sistema
             
             ======================================
             """;
@@ -204,134 +215,141 @@ public class Prueba {
                         "======================="
                     );
                     break;
+                    
+                case "cmuser":
 
+                    System.out.println();
+                    System.out.println(
+                        "======= CAMBIAR USUARIO ======="
+                    );
+
+                    System.out.print(
+                        "Ingrese su nombre de usuario actual: "
+                    );
+
+                    String uac = sc.nextLine();
+
+                    if (kernel.getUsuario().equals(uac)) {
+
+                        System.out.print(
+                            "Ingrese el nuevo nombre de usuario: "
+                        );
+
+                        String nu = sc.nextLine();
+
+                        kernel.setUsuario(nu);
+
+                        // Actualizar también el usuario en sesión
+                        // para que el prompt muestre el nuevo nombre
+                        if (kernel.getUsuarioActual() != null) {
+                            kernel.setUsuarioActual(nu);
+                        }
+
+                        System.out.println(
+                            "Nombre de usuario actualizado: "
+                            + kernel.getUsuario()
+                        );
+
+                    } else {
+
+                        System.out.println(
+                            "Usuario no encontrado, verifique."
+                        );
+                    }
+
+                    break;
+                // ==========================================
+                // CAMBIAR PASSWORD
+                // ==========================================
+                case "cmpass":
+
+                    System.out.println();
+                    System.out.println(
+                        "======= CAMBIAR PASSWORD ======="
+                    );
+
+                    System.out.print(
+                        "Ingrese su password actual: "
+                    );
+
+                    String pwa = sc.nextLine();
+
+                    if (kernel.getContraseña().equals(pwa)) {
+
+                        System.out.print(
+                            "Ingrese el nuevo password: "
+                        );
+
+                        String np = sc.nextLine();
+
+                        System.out.print(
+                            "Confirme el password: "
+                        );
+
+                        String conf = sc.nextLine();
+
+                        if (np.equals(conf)) {
+
+                            kernel.setContraseña(conf);
+
+                            System.out.println(
+                                "Password actualizado correctamente."
+                            );
+
+                        } else {
+
+                            System.out.println(
+                                "Las contraseñas no coinciden."
+                            );
+                        }
+
+                    } else {
+
+                        System.out.println(
+                            "Password incorrecto."
+                        );
+                    }
+
+                    break;            
+            
                 case "procesos":
 
-                    if (administrador.getCantidad() == 0) {
-                        System.out.println(
-                            "No hay procesos registrados."
-                        );
-                        break;
-                    }
-
                     System.out.println(
                         administrador.mostrarProcesos()
                     );
                     break;
+                
+                case "crear_proc": 
+                System.out.print("Nombre del proceso:");
+                String nomProc= sc.nextLine();
+                    System.out.print("¿Es de alta prioridad? (true/false): ");
+                    boolean prio = Boolean.parseBoolean(sc.nextLine());
+                    System.out.print("Tiempo de llegada: ");
+                    int lleg = Integer.parseInt(sc.nextLine());
+                    System.out.print("Tiempo de rafaga: ");
+                    int raf = Integer.parseInt(sc.nextLine());
 
-                // ==========================================
-                // CREAR PROCESO
-                // ==========================================
-
-                case "crear":
-
-                    System.out.println();
-                    System.out.println(
-                        "======= CREAR PROCESO ======="
-                    );
-
-                    System.out.print("Nombre: ");
-                    String nombreNuevo = sc.nextLine();
-
-                    int llegadaNueva = leerEntero(
-                        sc,
-                        "Llegada: "
-                    );
-
-                    int rafagaNueva = leerEntero(
-                        sc,
-                        "Ráfaga: "
-                    );
-
-                    if (llegadaNueva < 0 || rafagaNueva <= 0) {
-
-                        System.out.println(
-                            "Valores inválidos. "
-                            + "Llegada >= 0 y ráfaga > 0."
-                        );
-                        break;
-                    }
-
-                    proceso nuevo = administrador.crearProceso(
-                        nombreNuevo,
-                        false,
-                        llegadaNueva,
-                        rafagaNueva
-                    );
-
-                    if (nuevo != null) {
-
-                        System.out.println(
-                            "Proceso creado correctamente:"
-                        );
-
-                        System.out.println(
-                            "PID asignado: " + nuevo.getPID()
-                        );
-
+                    Proceso nuevoP = administrador.crearProceso(nomProc, prio, lleg, raf);
+                    if (nuevoP != null) {
+                        System.out.println("¡Proceso creado con exito! PID asignado: " + nuevoP.getPID());
                     } else {
-
-                        System.out.println(
-                            "No se pudo crear el proceso. "
-                            + "Capacidad máxima alcanzada."
-                        );
+                        System.out.println("Error: Capacidad maxima de procesos alcanzada.");
                     }
-
                     break;
 
-                // ==========================================
-                // ELIMINAR PROCESO
-                // ==========================================
-
-                case "eliminar":
-
-                    System.out.println();
-                    System.out.println(
-                        "======= ELIMINAR PROCESO ======="
-                    );
-
-                    if (administrador.getCantidad() == 0) {
-
-                        System.out.println(
-                            "No hay procesos para eliminar."
-                        );
-                        break;
-                    }
-
-                    System.out.println(
-                        "Procesos actuales:"
-                    );
-
-                    System.out.println(
-                        administrador.mostrarProcesos()
-                    );
-
-                    int pidEliminar = leerEntero(
-                        sc,
-                        "PID a eliminar: "
-                    );
-
-                    if (administrador.eliminarProceso(pidEliminar)) {
-
-                        System.out.println(
-                            "Proceso con PID "
-                            + pidEliminar
-                            + " eliminado correctamente."
-                        );
-
+                case "eliminar_proc":
+                    System.out.print("Ingrese el PID del proceso a eliminar: ");
+                    int idEliminar = Integer.parseInt(sc.nextLine());
+                    if (administrador.eliminarProceso(idEliminar)) {
+                        System.out.println("Proceso con PID " + idEliminar + " eliminado correctamente.");
                     } else {
-
-                        System.out.println(
-                            "No se encontró un proceso "
-                            + "con PID " + pidEliminar + "."
-                        );
+                        System.out.println("No se encontro un proceso con el PID especificado.");
                     }
-
                     break;
 
                 // ==========================================
                 // SJF EXPROPIATIVO + GANTT + RESULTADOS
-                // + CICLO DE VIDA (DINÁMICO)
+                // + CICLO DE VIDA
                 // ==========================================
 
                 case "sjf":
@@ -347,18 +365,7 @@ public class Prueba {
                         "======================================"
                     );
 
-                    if (administrador.getCantidad() == 0) {
-
-                        System.out.println(
-                            "No hay procesos para planificar."
-                        );
-                        break;
-                    }
-
-                    // Reset antes de volver a simular
-                    administrador.reiniciarTodos();
-
-                    SJFe sjf = new SJFe(administrador);
+                    SJFE sjf = new SJFE(administrador);
                     sjf.ejecutar();
 
                     System.out.println(
@@ -378,17 +385,15 @@ public class Prueba {
                     System.out.println(
                         "======================================"
                     );
-
-                    // Recorrido dinámico de todos los
-                    // procesos que quedan en el administrador
-                    for (int i = 0;
-                         i < administrador.getCantidad();
-                         i++) {
-
-                        mostrarCiclo(
-                            administrador.getProceso(i)
-                        );
+                    
+                    for(int i = 0; i < administrador.getCantidad(); i++) {
+                        mostrarCiclo(administrador.getProceso(i));
                     }
+                    
+                    mostrarCiclo(p1);
+                    mostrarCiclo(p2);
+                    mostrarCiclo(p3);
+                    mostrarCiclo(p4);
 
                     break;
 
@@ -444,108 +449,6 @@ public class Prueba {
                     salir = true;
                     break;
 
-                // ==========================================
-                // CAMBIAR NOMBRE DE USUARIO
-                // ==========================================
-
-                case "cmuser":
-
-                    System.out.println();
-                    System.out.println(
-                        "======= CAMBIAR USUARIO ======="
-                    );
-
-                    System.out.print(
-                        "Ingrese su nombre de usuario actual: "
-                    );
-
-                    String uac = sc.nextLine();
-
-                    if (kernel.getUsuario().equals(uac)) {
-
-                        System.out.print(
-                            "Ingrese el nuevo nombre de usuario: "
-                        );
-
-                        String nu = sc.nextLine();
-
-                        kernel.setUsuario(nu);
-
-                        // Actualizar también el usuario en sesión
-                        // para que el prompt muestre el nuevo nombre
-                        if (kernel.getUsuarioActual() != null) {
-                            kernel.setUsuarioActual(nu);
-                        }
-
-                        System.out.println(
-                            "Nombre de usuario actualizado: "
-                            + kernel.getUsuario()
-                        );
-
-                    } else {
-
-                        System.out.println(
-                            "Usuario no encontrado, verifique."
-                        );
-                    }
-
-                    break;
-
-                // ==========================================
-                // CAMBIAR PASSWORD
-                // ==========================================
-
-                case "cmpass":
-
-                    System.out.println();
-                    System.out.println(
-                        "======= CAMBIAR PASSWORD ======="
-                    );
-
-                    System.out.print(
-                        "Ingrese su password actual: "
-                    );
-
-                    String pwa = sc.nextLine();
-
-                    if (kernel.getContraseña().equals(pwa)) {
-
-                        System.out.print(
-                            "Ingrese el nuevo password: "
-                        );
-
-                        String np = sc.nextLine();
-
-                        System.out.print(
-                            "Confirme el password: "
-                        );
-
-                        String conf = sc.nextLine();
-
-                        if (np.equals(conf)) {
-
-                            kernel.setPassword(conf);
-
-                            System.out.println(
-                                "Password actualizado correctamente."
-                            );
-
-                        } else {
-
-                            System.out.println(
-                                "Las contraseñas no coinciden."
-                            );
-                        }
-
-                    } else {
-
-                        System.out.println(
-                            "Password incorrecto."
-                        );
-                    }
-
-                    break;
-
                 default:
 
                     System.out.println(
@@ -564,36 +467,13 @@ public class Prueba {
     }
 
     // ==========================================
-    // LEER ENTERO CON VALIDACIÓN
-    // ==========================================
-
-    public static int leerEntero(Scanner sc, String mensaje) {
-
-        while (true) {
-
-            System.out.print(mensaje);
-
-            String linea = sc.nextLine();
-
-            try {
-                return Integer.parseInt(linea.trim());
-            } catch (NumberFormatException e) {
-                System.out.println(
-                    "Valor inválido. Ingrese un número entero."
-                );
-            }
-        }
-    }
-
-    // ==========================================
     // MOSTRAR CICLO DE UN PROCESO
     // ==========================================
 
-    public static void mostrarCiclo(proceso p) {
+    public static void mostrarCiclo(Proceso p) {
 
         System.out.println(
             "\nProceso " + p.getNombre()
-            + " (PID " + p.getPID() + ")"
         );
 
         System.out.println(

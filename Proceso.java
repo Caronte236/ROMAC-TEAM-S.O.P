@@ -1,4 +1,4 @@
-public class proceso {
+public class Proceso {
 
     public enum estado {
         nuevo,
@@ -11,7 +11,7 @@ public class proceso {
     private int PID;
     private String nombre;
     private boolean prioridad;
-    private estado est;
+
     // Datos para planificación
     private int llegada;
     private int rafaga;
@@ -19,11 +19,11 @@ public class proceso {
     private int inicio;
     private int fin;
 
-   
+    private estado est;
 
     private String historial;
 
-    public proceso(int p, String n, boolean pri, int l, int r) {
+    public Proceso(int p, String n, boolean pri, int l, int r) {
 
         PID = p;
         nombre = n;
@@ -178,18 +178,7 @@ public class proceso {
     public String getHistorial() {
         return historial;
     }
-    // ==========================================
-// REINICIAR PROCESO PARA NUEVA SIMULACIÓN
-// ==========================================
 
-public void reset() {
-
-    restante = rafaga;
-    inicio = -1;
-    fin = -1;
-    est = estado.nuevo;
-    historial = "";
-}
     public String mostrarProceso() {
 
         return "PID: " + PID

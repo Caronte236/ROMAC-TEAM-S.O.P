@@ -1,4 +1,4 @@
- 
+
     import java.util.Scanner;
 
 public class Kernel
@@ -91,9 +91,6 @@ public class Kernel
     public void setUsuario(String u){
         this.usuario=u;
     }
-    public void setPassword(String p){
-        this.contraseña=p;
-    }
     
     public String getUsuario() {
         return usuario;
@@ -102,5 +99,11 @@ public class Kernel
     public String getContraseña() {
         return contraseña;
     }
+    
+    public void setContraseña(String c){
+        this.contraseña=c;
+    }
+    
+
    
 }

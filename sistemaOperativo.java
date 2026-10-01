@@ -8,7 +8,7 @@ public sistemaOperativo(String n, String v){
     this.nombre=n;
     this.version=v;
     this.logo= genLogo();
-    this.creadores="Jorge Carrera  \n Cyntia Angeles \n Joselyn Olivera \n Jisharlyn Miguel \n Michael Reyes";
+    this.creadores="\n Jorge Carrera  \n Cyntia Angeles \n Joselyn Olivera \n Jisharlyn Miguel \n Michael Reyes";
 }
 
     public void setNombre(String n){
@@ -73,7 +73,7 @@ public String genLogo(){
     }
     
     public String mostrarInformacion(){
-        return "Sistema operativo: " + nombre + "\n version: " + version + "\n" +  "\n Creadores:" + creadores + "\n Romac es un sistema operativo monousuario y modular \n diseñado para trabajar con un solo usuario y organizado en diferentes modulos \n para representar sus principales funciones";
+        return "Sistema operativo: " + nombre + "\n version: " + version + "\n" + logo + "\n Creadores:" + creadores + "\n Romac es un sistema operativo monousuario y modular \n diseñado para trabajar con un solo usuario y organizado en diferentes modulos \n para representar sus principales funciones";
     
     }
     

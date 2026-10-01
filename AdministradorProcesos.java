@@ -1,12 +1,12 @@
 public class AdministradorProcesos {
 
-    private proceso[] procesos;
+    private Proceso[] procesos;
     private int cantidad;
     private int siguientePID;
 
     public AdministradorProcesos(int capacidad) {
 
-        procesos = new proceso[capacidad];
+        procesos = new Proceso[capacidad];
 
         cantidad = 0;
         siguientePID = 1;
@@ -16,7 +16,7 @@ public class AdministradorProcesos {
     // CREAR PROCESO
     // -----------------------------
 
-    public proceso crearProceso(String nombre,
+    public Proceso crearProceso(String nombre,
                                 boolean prioridad,
                                 int llegada,
                                 int rafaga) {
@@ -25,7 +25,7 @@ public class AdministradorProcesos {
             return null;
         }
 
-        proceso p = new proceso(
+        Proceso p = new Proceso(
                 siguientePID,
                 nombre,
                 prioridad,
@@ -45,7 +45,7 @@ public class AdministradorProcesos {
     // BUSCAR PROCESO
     // -----------------------------
 
-    public proceso buscarProceso(int PID) {
+    public Proceso buscarProceso(int PID) {
 
         for (int i = 0; i < cantidad; i++) {
 
@@ -80,13 +80,13 @@ public class AdministradorProcesos {
 
     public boolean finalizarProceso(int PID, int tiempo) {
 
-        proceso p = buscarProceso(PID);
+        Proceso p = buscarProceso(PID);
 
         if (p == null) {
             return false;
         }
 
-        if (p.getEstado() == proceso.estado.ejecutando
+        if (p.getEstado() == Proceso.estado.ejecutando
                 && p.haTerminado()) {
 
             p.terminar(tiempo);
@@ -103,13 +103,13 @@ public class AdministradorProcesos {
 
     public boolean bloquearProceso(int PID, int tiempo) {
 
-        proceso p = buscarProceso(PID);
+        Proceso p = buscarProceso(PID);
 
         if (p == null) {
             return false;
         }
 
-        if (p.getEstado() == proceso.estado.ejecutando) {
+        if (p.getEstado() == Proceso.estado.ejecutando) {
 
             p.ponerEnEspera(tiempo);
 
@@ -125,13 +125,13 @@ public class AdministradorProcesos {
 
     public boolean desbloquearProceso(int PID, int tiempo) {
 
-        proceso p = buscarProceso(PID);
+        Proceso p = buscarProceso(PID);
 
         if (p == null) {
             return false;
         }
 
-        if (p.getEstado() == proceso.estado.espera) {
+        if (p.getEstado() == Proceso.estado.espera) {
 
             p.pasarAListo(tiempo);
 
@@ -165,16 +165,7 @@ public class AdministradorProcesos {
 
         return false;
     }
-// ==========================================
-// REINICIAR TODOS LOS PROCESOS
-// ==========================================
 
-public void reiniciarTodos() {
-
-    for (int i = 0; i < cantidad; i++) {
-        procesos[i].reset();
-    }
-}
     // -----------------------------
     // GETTERS
     // -----------------------------
@@ -183,7 +174,7 @@ public void reiniciarTodos() {
         return cantidad;
     }
 
-    public proceso getProceso(int posicion) {
+    public Proceso getProceso(int posicion) {
 
         if (posicion >= 0 && posicion < cantidad) {
             return procesos[posicion];

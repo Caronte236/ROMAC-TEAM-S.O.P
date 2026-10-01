@@ -178,7 +178,18 @@ public class proceso {
     public String getHistorial() {
         return historial;
     }
+    // ==========================================
+// REINICIAR PROCESO PARA NUEVA SIMULACIÓN
+// ==========================================
 
+public void reset() {
+
+    restante = rafaga;
+    inicio = -1;
+    fin = -1;
+    est = estado.nuevo;
+    historial = "";
+}
     public String mostrarProceso() {
 
         return "PID: " + PID

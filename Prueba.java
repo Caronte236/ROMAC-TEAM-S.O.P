@@ -36,7 +36,7 @@ public class Prueba {
                 new AdministradorProcesos(10);
 
         // ==========================================
-        // CREAR PROCESOS
+        // CREAR PROCESOS INICIALES
         // ==========================================
         //
         // Proceso | Llegada | Ráfaga
@@ -47,21 +47,10 @@ public class Prueba {
         //
         // ==========================================
 
-        proceso p1 = administrador.crearProceso(
-                "P1", false, 0, 7
-        );
-
-        proceso p2 = administrador.crearProceso(
-                "P2", false, 2, 4
-        );
-
-        proceso p3 = administrador.crearProceso(
-                "P3", false, 4, 1
-        );
-
-        proceso p4 = administrador.crearProceso(
-                "P4", false, 5, 4
-        );
+        administrador.crearProceso("P1", false, 0, 7);
+        administrador.crearProceso("P2", false, 2, 4);
+        administrador.crearProceso("P3", false, 4, 1);
+        administrador.crearProceso("P4", false, 5, 4);
 
         // ==========================================
         // CREAR USUARIO (como en Kernel.main)
@@ -158,6 +147,8 @@ public class Prueba {
             informacion   - Información del sistema
             usuario       - Usuario actual
             procesos      - Administrador de tareas
+            crear         - Crear un nuevo proceso
+            eliminar      - Eliminar un proceso por PID
             sjf           - Ejecutar planificador SJF expropiativo
             memoria       - Información de memoria
             archivos      - Sistema de archivos
@@ -214,14 +205,131 @@ public class Prueba {
 
                 case "procesos":
 
+                    if (administrador.getCantidad() == 0) {
+                        System.out.println(
+                            "No hay procesos registrados."
+                        );
+                        break;
+                    }
+
                     System.out.println(
                         administrador.mostrarProcesos()
                     );
                     break;
 
                 // ==========================================
+                // CREAR PROCESO
+                // ==========================================
+
+                case "crear":
+
+                    System.out.println();
+                    System.out.println(
+                        "======= CREAR PROCESO ======="
+                    );
+
+                    System.out.print("Nombre: ");
+                    String nombreNuevo = sc.nextLine();
+
+                    int llegadaNueva = leerEntero(
+                        sc,
+                        "Llegada: "
+                    );
+
+                    int rafagaNueva = leerEntero(
+                        sc,
+                        "Ráfaga: "
+                    );
+
+                    if (llegadaNueva < 0 || rafagaNueva <= 0) {
+
+                        System.out.println(
+                            "Valores inválidos. "
+                            + "Llegada >= 0 y ráfaga > 0."
+                        );
+                        break;
+                    }
+
+                    proceso nuevo = administrador.crearProceso(
+                        nombreNuevo,
+                        false,
+                        llegadaNueva,
+                        rafagaNueva
+                    );
+
+                    if (nuevo != null) {
+
+                        System.out.println(
+                            "Proceso creado correctamente:"
+                        );
+
+                        System.out.println(
+                            "PID asignado: " + nuevo.getPID()
+                        );
+
+                    } else {
+
+                        System.out.println(
+                            "No se pudo crear el proceso. "
+                            + "Capacidad máxima alcanzada."
+                        );
+                    }
+
+                    break;
+
+                // ==========================================
+                // ELIMINAR PROCESO
+                // ==========================================
+
+                case "eliminar":
+
+                    System.out.println();
+                    System.out.println(
+                        "======= ELIMINAR PROCESO ======="
+                    );
+
+                    if (administrador.getCantidad() == 0) {
+
+                        System.out.println(
+                            "No hay procesos para eliminar."
+                        );
+                        break;
+                    }
+
+                    System.out.println(
+                        "Procesos actuales:"
+                    );
+
+                    System.out.println(
+                        administrador.mostrarProcesos()
+                    );
+
+                    int pidEliminar = leerEntero(
+                        sc,
+                        "PID a eliminar: "
+                    );
+
+                    if (administrador.eliminarProceso(pidEliminar)) {
+
+                        System.out.println(
+                            "Proceso con PID "
+                            + pidEliminar
+                            + " eliminado correctamente."
+                        );
+
+                    } else {
+
+                        System.out.println(
+                            "No se encontró un proceso "
+                            + "con PID " + pidEliminar + "."
+                        );
+                    }
+
+                    break;
+
+                // ==========================================
                 // SJF EXPROPIATIVO + GANTT + RESULTADOS
-                // + CICLO DE VIDA
+                // + CICLO DE VIDA (DINÁMICO)
                 // ==========================================
 
                 case "sjf":
@@ -236,6 +344,19 @@ public class Prueba {
                     System.out.println(
                         "======================================"
                     );
+
+                    if (administrador.getCantidad() == 0) {
+
+                        System.out.println(
+                            "No hay procesos para planificar."
+                        );
+                        break;
+                    }
+
+                    // 🔑 RESET antes de volver a simular:
+                    //    reinicia restante, estado, inicio,
+                    //    fin e historial de cada proceso.
+                    administrador.reiniciarTodos();
 
                     SJFe sjf = new SJFe(administrador);
                     sjf.ejecutar();
@@ -258,10 +379,16 @@ public class Prueba {
                         "======================================"
                     );
 
-                    mostrarCiclo(p1);
-                    mostrarCiclo(p2);
-                    mostrarCiclo(p3);
-                    mostrarCiclo(p4);
+                    // Recorrido dinámico de TODOS los
+                    // procesos que quedan en el administrador
+                    for (int i = 0;
+                         i < administrador.getCantidad();
+                         i++) {
+
+                        mostrarCiclo(
+                            administrador.getProceso(i)
+                        );
+                    }
 
                     break;
 
@@ -335,6 +462,28 @@ public class Prueba {
     }
 
     // ==========================================
+    // LEER ENTERO CON VALIDACIÓN
+    // ==========================================
+
+    public static int leerEntero(Scanner sc, String mensaje) {
+
+        while (true) {
+
+            System.out.print(mensaje);
+
+            String linea = sc.nextLine();
+
+            try {
+                return Integer.parseInt(linea.trim());
+            } catch (NumberFormatException e) {
+                System.out.println(
+                    "Valor inválido. Ingrese un número entero."
+                );
+            }
+        }
+    }
+
+    // ==========================================
     // MOSTRAR CICLO DE UN PROCESO
     // ==========================================
 
@@ -342,6 +491,7 @@ public class Prueba {
 
         System.out.println(
             "\nProceso " + p.getNombre()
+            + " (PID " + p.getPID() + ")"
         );
 
         System.out.println(

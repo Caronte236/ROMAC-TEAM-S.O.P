@@ -165,7 +165,16 @@ public class AdministradorProcesos {
 
         return false;
     }
+// ==========================================
+// REINICIAR TODOS LOS PROCESOS
+// ==========================================
 
+public void reiniciarTodos() {
+
+    for (int i = 0; i < cantidad; i++) {
+        procesos[i].reset();
+    }
+}
     // -----------------------------
     // GETTERS
     // -----------------------------

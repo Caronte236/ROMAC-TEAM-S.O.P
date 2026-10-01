@@ -1,11 +1,11 @@
-public class SJF {
+public class SJFe {
 
     private AdministradorProcesos administrador;
 
     private int tiempo;
     private String gantt;
 
-    public SJF(AdministradorProcesos a) {
+    public SJFe(AdministradorProcesos a) {
 
         administrador = a;
         tiempo = 0;

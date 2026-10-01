@@ -237,7 +237,7 @@ public class Prueba {
                         "======================================"
                     );
 
-                    SJF sjf = new SJF(administrador);
+                    SJFe sjf = new SJFe(administrador);
                     sjf.ejecutar();
 
                     System.out.println(

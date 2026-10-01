@@ -11,7 +11,7 @@ public class proceso {
     private int PID;
     private String nombre;
     private boolean prioridad;
-
+    private estado est;
     // Datos para planificación
     private int llegada;
     private int rafaga;
@@ -19,7 +19,7 @@ public class proceso {
     private int inicio;
     private int fin;
 
-    private estado est;
+   
 
     private String historial;
 

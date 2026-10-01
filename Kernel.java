@@ -1,5 +1,8 @@
-public class Kernel {
-    
+ 
+    import java.util.Scanner;
+
+public class Kernel
+{
     private boolean encendido;
     private String usuarioActual;
     private String usuario;
@@ -8,8 +11,8 @@ public class Kernel {
     public Kernel() {
         this.encendido = false;
         this.usuarioActual = null;
-        this.usuario = "admin";
-        this.contraseña = "admin";
+        this.usuario = null;
+        this.contraseña = null;
     }
 
     public void encender() {
@@ -17,7 +20,13 @@ public class Kernel {
             encendido = true;
         }
     }
-
+    
+    public String crear(String user, String pass){
+         usuario=user;
+         contraseña=pass;
+         return "user: "+ usuario + ", pass= " + contraseña;
+    } 
+    
     public void apagar() {
         if (encendido) {
             encendido = false;
@@ -90,4 +99,5 @@ public class Kernel {
     public String getContraseña() {
         return contraseña;
     }
+   
 }

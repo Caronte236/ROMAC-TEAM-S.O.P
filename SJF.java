@@ -1,199 +1,261 @@
 public class SJF {
 
-    private PP[] procesos;
-    private int cantidad;
+    private AdministradorProcesos administrador;
+
     private int tiempo;
-    private int terminados;
-    
-    //
+    private String gantt;
 
-    public SJF(int capacidad) {
+    public SJF(AdministradorProcesos a) {
 
-        procesos = new PP[capacidad];
-        cantidad = 0;
+        administrador = a;
         tiempo = 0;
-        terminados = 0;
+        gantt = "";
     }
 
-    public boolean agregarProceso(PP planificacion) {
+    // -----------------------------
+    // BUSCAR PROCESO MÁS CORTO
+    // -----------------------------
 
-        if (cantidad >= procesos.length) {
-            return false;
-        }
+    private proceso buscarMasCorto() {
 
-        procesos[cantidad] = planificacion;
-        cantidad++;
+        proceso elegido = null;
 
-        return true;
-    }
+        for (int i = 0; i < administrador.getCantidad(); i++) {
 
-    public void ordenarPorLlegada() {
+            proceso p = administrador.getProceso(i);
 
-        for (int i = 0; i < cantidad - 1; i++) {
+            if (p.getEstado() == proceso.estado.listo
+                    && p.getRestante() > 0) {
 
-            for (int j = 0; j < cantidad - 1 - i; j++) {
+                if (elegido == null) {
 
-                if (procesos[j].getLlegada() >
-                    procesos[j + 1].getLlegada()) {
+                    elegido = p;
 
-                    PP auxiliar = procesos[j];
+                } else if (p.getRestante()
+                        < elegido.getRestante()) {
 
-                    procesos[j] = procesos[j + 1];
-
-                    procesos[j + 1] = auxiliar;
-                }
-            }
-        }
-    }
-
-    private PP seleccionarProceso() {
-
-        PP seleccionado = null;
-
-        for (int i = 0; i < cantidad; i++) {
-
-            PP actual = procesos[i];
-
-            if (actual.yaLlego(tiempo) &&
-                actual.necesitaCPU()) {
-
-                if (seleccionado == null) {
-
-                    seleccionado = actual;
-
-                } else if (
-                    actual.getRestante() <
-                    seleccionado.getRestante()) {
-
-                    seleccionado = actual;
+                    elegido = p;
                 }
             }
         }
 
-        return seleccionado;
+        return elegido;
     }
+
+    // -----------------------------
+    // ADMITIR PROCESOS
+    // -----------------------------
+
+    private void admitirProcesos() {
+
+        for (int i = 0;
+             i < administrador.getCantidad();
+             i++) {
+
+            proceso p = administrador.getProceso(i);
+
+            if (p.getEstado() == proceso.estado.nuevo
+                    && p.getLlegada() <= tiempo) {
+
+                p.pasarAListo(tiempo);
+            }
+        }
+    }
+
+    // -----------------------------
+    // EJECUTAR SJF
+    // -----------------------------
 
     public void ejecutar() {
 
+        proceso actual = null;
+
+        int terminados = 0;
+
         tiempo = 0;
-        terminados = 0;
 
-        System.out.println(
-            "\n================================"
-        );
+        gantt = "";
 
-        System.out.println(
-            "      PLANIFICACION SJF"
-        );
+        int totalProcesos = administrador.getCantidad();
 
-        System.out.println(
-            "================================"
-        );
+        while (terminados < totalProcesos) {
 
-        System.out.print("\nGantt: ");
+            // Llegan nuevos procesos
+            admitirProcesos();
 
-        while (terminados < cantidad) {
+            // Buscar proceso más corto
+            proceso candidato = buscarMasCorto();
 
-            PP seleccionado =
-                seleccionarProceso();
+            // ---------------------------------
+            // SI NO HAY PROCESOS LISTOS
+            // ---------------------------------
 
-            if (seleccionado == null) {
+            if (actual == null) {
 
-                tiempo++;
+                if (candidato != null) {
 
-                System.out.print("-- ");
+                    actual = candidato;
+
+                    actual.ejecutar(tiempo);
+                }
 
             } else {
 
-                proceso p =
-                    seleccionado.getProceso();
+                // ---------------------------------
+                // VERIFICAR SI HAY PREEMPCIÓN
+                // ---------------------------------
 
-                p.ejecutar();
+                if (candidato != null
+                        && candidato != actual
+                        && candidato.getRestante()
+                        < actual.getRestante()) {
 
-                System.out.print(
-                    "P" + p.getPID() + " "
-                );
+                    actual.regresarAListo(tiempo);
 
-                seleccionado.consumirUnidad();
+                    actual = candidato;
+
+                    actual.ejecutar(tiempo);
+                }
+            }
+
+            // ---------------------------------
+            // EJECUTAR UNA UNIDAD DE TIEMPO
+            // ---------------------------------
+
+            if (actual != null) {
+
+                agregarGantt(actual.getPID(), tiempo);
+
+                actual.ejecutarUnidad();
 
                 tiempo++;
 
-                if (!seleccionado.necesitaCPU()) {
+                // ---------------------------------
+                // TERMINÓ
+                // ---------------------------------
 
-                    seleccionado.setFin(tiempo);
+                if (actual.haTerminado()) {
 
-                    p.terminar();
+                    actual.terminar(tiempo);
 
                     terminados++;
 
-                } else {
-
-                    p.pasarAListo();
+                    actual = null;
                 }
+
+            } else {
+
+                // CPU sin proceso
+                agregarGantt(0, tiempo);
+
+                tiempo++;
             }
         }
-
-        System.out.println();
-
-        System.out.println(
-            "\nTiempo total: " + tiempo
-        );
-
-        System.out.println(
-            "Procesos terminados: " +
-            terminados
-        );
     }
 
-    public void mostrarResultados() {
+    // -----------------------------
+    // CONSTRUIR GANTT
+    // -----------------------------
 
-        System.out.println(
-            "\n=============================================="
-        );
+    private void agregarGantt(int PID, int t) {
 
-        System.out.println(
-            "             RESULTADOS SJF"
-        );
+        if (PID == 0) {
 
-        System.out.println(
-            "=============================================="
-        );
+            gantt += "| IDLE ";
 
-        System.out.println(
-            "Proceso\tLlegada\tRafaga\tFin\tEspera\tRetorno"
-        );
+        } else {
 
-        int sumaEspera = 0;
-        int sumaRetorno = 0;
+            gantt += "| P" + PID + " ";
+        }
+    }
 
-        for (int i = 0; i < cantidad; i++) {
+    // -----------------------------
+    // MOSTRAR GANTT
+    // -----------------------------
 
-            PP p = procesos[i];
+    public String mostrarGantt() {
 
-            sumaEspera += p.getEspera();
-            sumaRetorno += p.getRetorno();
+        String resultado = "\nDIAGRAMA DE GANTT\n\n";
 
-            System.out.println(
-                "P" + p.getNumero() +
-                "\t" + p.getLlegada() +
-                "\t" + p.getRafaga() +
-                "\t" + p.getFin() +
-                "\t" + p.getEspera() +
-                "\t" + p.getRetorno()
-            );
+        resultado += gantt;
+        resultado += "|\n";
+
+        resultado += "Tiempo: ";
+
+        for (int i = 0; i <= tiempo; i++) {
+
+            resultado += i + " ";
         }
 
-        if (cantidad > 0) {
+        resultado += "\n";
 
-            System.out.println(
-                "\nEspera promedio: " +
-                (double) sumaEspera / cantidad
-            );
+        return resultado;
+    }
 
-            System.out.println(
-                "Retorno promedio: " +
-                (double) sumaRetorno / cantidad
-            );
+    // -----------------------------
+    // MOSTRAR RESULTADOS
+    // -----------------------------
+
+    public String mostrarResultados() {
+
+        String resultado = "";
+
+        double esperaPromedio = 0;
+        double retornoPromedio = 0;
+        double respuestaPromedio = 0;
+
+        resultado += "\nRESULTADOS DE SJF\n\n";
+
+        resultado += "PID\tLlegada\tRáfaga\tFin\tEspera\tRetorno\tRespuesta\n";
+
+        for (int i = 0;
+             i < administrador.getCantidad();
+             i++) {
+
+            proceso p = administrador.getProceso(i);
+
+            resultado += "P" + p.getPID()
+                    + "\t"
+                    + p.getLlegada()
+                    + "\t"
+                    + p.getRafaga()
+                    + "\t"
+                    + p.getFin()
+                    + "\t"
+                    + p.getEspera()
+                    + "\t"
+                    + p.getRetorno()
+                    + "\t"
+                    + p.getRespuesta()
+                    + "\n";
+
+            esperaPromedio += p.getEspera();
+            retornoPromedio += p.getRetorno();
+            respuestaPromedio += p.getRespuesta();
         }
+
+        int n = administrador.getCantidad();
+
+        if (n > 0) {
+
+            esperaPromedio /= n;
+            retornoPromedio /= n;
+            respuestaPromedio /= n;
+        }
+
+        resultado += "\nPromedio de espera: "
+                + esperaPromedio;
+
+        resultado += "\nPromedio de retorno: "
+                + retornoPromedio;
+
+        resultado += "\nPromedio de respuesta: "
+                + respuestaPromedio;
+
+        return resultado;
+    }
+
+    public int getTiempo() {
+        return tiempo;
     }
 }

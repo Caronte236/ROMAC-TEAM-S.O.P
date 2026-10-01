@@ -12,67 +12,44 @@ public class AdministradorProcesos {
         siguientePID = 1;
     }
 
-    public proceso crearProceso(
-        String nombre,
-        boolean prioridad,
-        int llegada,
-        int rafaga) {
+    // -----------------------------
+    // CREAR PROCESO
+    // -----------------------------
+
+    public proceso crearProceso(String nombre,
+                                boolean prioridad,
+                                int llegada,
+                                int rafaga) {
 
         if (cantidad >= procesos.length) {
-
-            System.out.println(
-                "No hay espacio para crear otro proceso."
-            );
-
             return null;
         }
 
-        proceso nuevo = new proceso(
-            siguientePID,
-            nombre,
-            prioridad,
-            rafaga
+        proceso p = new proceso(
+                siguientePID,
+                nombre,
+                prioridad,
+                llegada,
+                rafaga
         );
 
-        procesos[cantidad] = nuevo;
+        procesos[cantidad] = p;
 
         cantidad++;
-
         siguientePID++;
 
-        return nuevo;
+        return p;
     }
 
-    public PP crearPlanificacion(
-        proceso p,
-        int llegada,
-        int rafaga) {
+    // -----------------------------
+    // BUSCAR PROCESO
+    // -----------------------------
 
-        return new PP(
-            p,
-            llegada,
-            rafaga
-        );
-    }
-
-    public void enviarProcesosAListos() {
+    public proceso buscarProceso(int PID) {
 
         for (int i = 0; i < cantidad; i++) {
 
-            if (procesos[i].getEstado() ==
-                proceso.estado.nuevo) {
-
-                procesos[i].pasarAListo();
-            }
-        }
-    }
-
-    public proceso buscarProceso(int pid) {
-
-        for (int i = 0; i < cantidad; i++) {
-
-            if (procesos[i].getPID() == pid) {
-
+            if (procesos[i].getPID() == PID) {
                 return procesos[i];
             }
         }
@@ -80,93 +57,118 @@ public class AdministradorProcesos {
         return null;
     }
 
-    public void mostrarProcesos() {
+    // -----------------------------
+    // MOSTRAR PROCESOS
+    // -----------------------------
 
-        System.out.println(
-            "\n================================"
-        );
+    public String mostrarProcesos() {
 
-        System.out.println(
-            "       PROCESOS DEL SISTEMA"
-        );
-
-        System.out.println(
-            "================================"
-        );
-
-        if (cantidad == 0) {
-
-            System.out.println(
-                "No existen procesos."
-            );
-
-            return;
-        }
+        String texto = "";
 
         for (int i = 0; i < cantidad; i++) {
 
-            System.out.println(
-                procesos[i].mostrarProceso()
-            );
-
-            System.out.println(
-                "--------------------------------"
-            );
+            texto += procesos[i].mostrarProceso();
+            texto += "\n----------------------\n";
         }
+
+        return texto;
     }
 
-    public void finalizarProceso(int pid) {
+    // -----------------------------
+    // FINALIZAR PROCESO
+    // -----------------------------
 
-        proceso p = buscarProceso(pid);
+    public boolean finalizarProceso(int PID, int tiempo) {
 
-        if (p != null) {
+        proceso p = buscarProceso(PID);
 
-            p.terminar();
-
-            System.out.println(
-                "Proceso P" + pid +
-                " finalizado."
-            );
-
-        } else {
-
-            System.out.println(
-                "No se encontró el proceso."
-            );
+        if (p == null) {
+            return false;
         }
+
+        if (p.getEstado() == proceso.estado.ejecutando
+                && p.haTerminado()) {
+
+            p.terminar(tiempo);
+
+            return true;
+        }
+
+        return false;
     }
 
-    public void eliminarProceso(int pid) {
+    // -----------------------------
+    // PONER EN ESPERA
+    // -----------------------------
+
+    public boolean bloquearProceso(int PID, int tiempo) {
+
+        proceso p = buscarProceso(PID);
+
+        if (p == null) {
+            return false;
+        }
+
+        if (p.getEstado() == proceso.estado.ejecutando) {
+
+            p.ponerEnEspera(tiempo);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    // -----------------------------
+    // REGRESAR DE ESPERA
+    // -----------------------------
+
+    public boolean desbloquearProceso(int PID, int tiempo) {
+
+        proceso p = buscarProceso(PID);
+
+        if (p == null) {
+            return false;
+        }
+
+        if (p.getEstado() == proceso.estado.espera) {
+
+            p.pasarAListo(tiempo);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    // -----------------------------
+    // ELIMINAR PROCESO
+    // -----------------------------
+
+    public boolean eliminarProceso(int PID) {
 
         for (int i = 0; i < cantidad; i++) {
 
-            if (procesos[i].getPID() == pid) {
+            if (procesos[i].getPID() == PID) {
 
-                for (int j = i;
-                     j < cantidad - 1;
-                     j++) {
-
-                    procesos[j] =
-                        procesos[j + 1];
+                for (int j = i; j < cantidad - 1; j++) {
+                    procesos[j] = procesos[j + 1];
                 }
 
                 procesos[cantidad - 1] = null;
 
                 cantidad--;
 
-                System.out.println(
-                    "Proceso P" + pid +
-                    " eliminado del sistema."
-                );
-
-                return;
+                return true;
             }
         }
 
-        System.out.println(
-            "No se encontró el proceso."
-        );
+        return false;
     }
+
+    // -----------------------------
+    // GETTERS
+    // -----------------------------
 
     public int getCantidad() {
         return cantidad;
@@ -174,9 +176,7 @@ public class AdministradorProcesos {
 
     public proceso getProceso(int posicion) {
 
-        if (posicion >= 0 &&
-            posicion < cantidad) {
-
+        if (posicion >= 0 && posicion < cantidad) {
             return procesos[posicion];
         }
 

@@ -154,6 +154,8 @@ public class Prueba {
             archivos      - Sistema de archivos
             cerrar        - Cerrar sesión
             apagar        - Apagar sistema
+            cmuser        - Cambiar nombre de usuario
+            cmpass        - Cambiar password
             
             ======================================
             """;
@@ -353,9 +355,7 @@ public class Prueba {
                         break;
                     }
 
-                    // 🔑 RESET antes de volver a simular:
-                    //    reinicia restante, estado, inicio,
-                    //    fin e historial de cada proceso.
+                    // Reset antes de volver a simular
                     administrador.reiniciarTodos();
 
                     SJFe sjf = new SJFe(administrador);
@@ -379,7 +379,7 @@ public class Prueba {
                         "======================================"
                     );
 
-                    // Recorrido dinámico de TODOS los
+                    // Recorrido dinámico de todos los
                     // procesos que quedan en el administrador
                     for (int i = 0;
                          i < administrador.getCantidad();
@@ -442,6 +442,108 @@ public class Prueba {
                     );
 
                     salir = true;
+                    break;
+
+                // ==========================================
+                // CAMBIAR NOMBRE DE USUARIO
+                // ==========================================
+
+                case "cmuser":
+
+                    System.out.println();
+                    System.out.println(
+                        "======= CAMBIAR USUARIO ======="
+                    );
+
+                    System.out.print(
+                        "Ingrese su nombre de usuario actual: "
+                    );
+
+                    String uac = sc.nextLine();
+
+                    if (kernel.getUsuario().equals(uac)) {
+
+                        System.out.print(
+                            "Ingrese el nuevo nombre de usuario: "
+                        );
+
+                        String nu = sc.nextLine();
+
+                        kernel.setUsuario(nu);
+
+                        // Actualizar también el usuario en sesión
+                        // para que el prompt muestre el nuevo nombre
+                        if (kernel.getUsuarioActual() != null) {
+                            kernel.setUsuarioActual(nu);
+                        }
+
+                        System.out.println(
+                            "Nombre de usuario actualizado: "
+                            + kernel.getUsuario()
+                        );
+
+                    } else {
+
+                        System.out.println(
+                            "Usuario no encontrado, verifique."
+                        );
+                    }
+
+                    break;
+
+                // ==========================================
+                // CAMBIAR PASSWORD
+                // ==========================================
+
+                case "cmpass":
+
+                    System.out.println();
+                    System.out.println(
+                        "======= CAMBIAR PASSWORD ======="
+                    );
+
+                    System.out.print(
+                        "Ingrese su password actual: "
+                    );
+
+                    String pwa = sc.nextLine();
+
+                    if (kernel.getContraseña().equals(pwa)) {
+
+                        System.out.print(
+                            "Ingrese el nuevo password: "
+                        );
+
+                        String np = sc.nextLine();
+
+                        System.out.print(
+                            "Confirme el password: "
+                        );
+
+                        String conf = sc.nextLine();
+
+                        if (np.equals(conf)) {
+
+                            kernel.setPassword(conf);
+
+                            System.out.println(
+                                "Password actualizado correctamente."
+                            );
+
+                        } else {
+
+                            System.out.println(
+                                "Las contraseñas no coinciden."
+                            );
+                        }
+
+                    } else {
+
+                        System.out.println(
+                            "Password incorrecto."
+                        );
+                    }
+
                     break;
 
                 default:

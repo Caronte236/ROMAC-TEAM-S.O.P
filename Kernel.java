@@ -91,6 +91,9 @@ public class Kernel
     public void setUsuario(String u){
         this.usuario=u;
     }
+    public void setPassword(String p){
+        this.contraseña=p;
+    }
     
     public String getUsuario() {
         return usuario;

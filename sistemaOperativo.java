@@ -4,6 +4,7 @@ public class sistemaOperativo{
     private String logo;
     private String creadores;
     
+    
 public sistemaOperativo(String n, String v){
     this.nombre=n;
     this.version=v;

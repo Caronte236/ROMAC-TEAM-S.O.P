@@ -1,5 +1,6 @@
 public class SJFE {
 
+    
     private AdministradorProcesos administrador;
 
     private int tiempo;

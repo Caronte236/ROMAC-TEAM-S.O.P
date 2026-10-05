@@ -1,5 +1,6 @@
 public class Proceso {
 
+    
     public enum estado {
         nuevo,
         listo,

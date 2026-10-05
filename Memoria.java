@@ -3,6 +3,7 @@ public class Memoria {
     private int memoriaTotal;
     private int memoriaOcupada;
     
+    
     public Memoria(int total, int ocupada) {
         memoriaTotal = total;
         memoriaOcupada = ocupada;

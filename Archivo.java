@@ -1,5 +1,6 @@
 public class Archivo {
     
+    
     private String nombre;
     private String tipo;
     private double tamaño;

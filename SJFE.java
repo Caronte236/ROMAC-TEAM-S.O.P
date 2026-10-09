@@ -3,70 +3,64 @@ import java.util.List;
 
 public class SJFE {
 
-    private AdministradorProcesos administrador;
+    private final AdministradorProcesos admin;
+    private final List<String> gantt = new ArrayList<>();
     private int tiempo;
 
-    // Cada elemento guarda: {indiceProceso, tiempoInicio}
-    // indiceProceso = -1 significa IDLE
-    private List<int[]> segmentos;
-
     public SJFE(AdministradorProcesos a) {
-        administrador = a;
-        tiempo = 0;
-        segmentos = new ArrayList<>();
+        this.admin = a;
     }
 
-    // -----------------------------
-    // BUSCAR PROCESO MÁS CORTO
-    // -----------------------------
-    private Proceso buscarMasCorto() {
-        Proceso elegido = null;
-        for (int i = 0; i < administrador.getCantidad(); i++) {
-            Proceso p = administrador.getProceso(i);
-            if (p.getEstado() == Proceso.estado.listo && p.getRestante() > 0) {
-                if (elegido == null || p.getRestante() < elegido.getRestante()) {
-                    elegido = p;
+    // =========================================================
+    // SJF EXPROPIATIVO
+    // =========================================================
+    public void ejecutar() {
+
+        int n = admin.getCantidad();
+        if (n == 0) return;
+
+        tiempo = 0;
+        gantt.clear();
+        Proceso actual = null;
+
+        // Contar los que ya estaban terminados (por si se re-ejecuta)
+        int terminados = 0;
+        for (int i = 0; i < n; i++) {
+            if (admin.getProceso(i).getEstado() == Proceso.estado.terminado) {
+                terminados++;
+            }
+        }
+
+        while (terminados < n) {
+
+            // 1) Admitir procesos cuya llegada ya ocurrió
+            for (int i = 0; i < n; i++) {
+                Proceso p = admin.getProceso(i);
+                if (p.getEstado() == Proceso.estado.nuevo && p.getLlegada() <= tiempo) {
+                    p.pasarAListo(tiempo);
                 }
             }
-        }
-        return elegido;
-    }
 
-    // -----------------------------
-    // ADMITIR PROCESOS
-    // -----------------------------
-    private void admitirProcesos() {
-        for (int i = 0; i < administrador.getCantidad(); i++) {
-            Proceso p = administrador.getProceso(i);
-            if (p.getEstado() == Proceso.estado.nuevo && p.getLlegada() <= tiempo) {
-                p.pasarAListo(tiempo);
+            // 2) Buscar el más corto entre los LISTOS
+            Proceso candidato = null;
+            for (int i = 0; i < n; i++) {
+                Proceso p = admin.getProceso(i);
+                if (p.getEstado() == Proceso.estado.listo && p.getRestante() > 0) {
+                    if (candidato == null || p.getRestante() < candidato.getRestante()) {
+                        candidato = p;
+                    }
+                }
             }
-        }
-    }
 
-    // -----------------------------
-    // EJECUTAR SJF
-    // -----------------------------
-    public void ejecutar() {
-        Proceso actual = null;
-        int terminados = 0;
-        tiempo = 0;
-        segmentos = new ArrayList<>();
-
-        int totalProcesos = administrador.getCantidad();
-
-        while (terminados < totalProcesos) {
-
-            admitirProcesos();
-            Proceso candidato = buscarMasCorto();
-
+            // 3) Decidir quién ejecuta (con expropiación si aplica)
             if (actual == null) {
                 if (candidato != null) {
                     actual = candidato;
                     actual.ejecutar(tiempo);
                 }
             } else {
-                if (candidato != null && candidato != actual
+                if (candidato != null
+                        && candidato != actual
                         && candidato.getRestante() < actual.getRestante()) {
                     actual.regresarAListo(tiempo);
                     actual = candidato;
@@ -74,9 +68,9 @@ public class SJFE {
                 }
             }
 
+            // 4) Consumir una unidad de tiempo
             if (actual != null) {
-                int idx = indiceDe(actual);
-                segmentos.add(new int[]{idx, tiempo});
+                gantt.add(actual.getNombre());
                 actual.ejecutarUnidad();
                 tiempo++;
 
@@ -86,110 +80,91 @@ public class SJFE {
                     actual = null;
                 }
             } else {
-                segmentos.add(new int[]{-1, tiempo});
+                gantt.add("IDLE");
                 tiempo++;
             }
         }
     }
 
-    private int indiceDe(Proceso p) {
-        for (int i = 0; i < administrador.getCantidad(); i++) {
-            if (administrador.getProceso(i) == p) return i;
-        }
-        return -1;
-    }
-
-    // -----------------------------
-    // MOSTRAR GANTT (ALINEADO)
-    // -----------------------------
+    // =========================================================
+    // GANTT
+    // =========================================================
     public String mostrarGantt() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\nDIAGRAMA DE GANTT\n\n");
 
-        if (segmentos.isEmpty()) {
-            sb.append("(sin ejecuciones)\n");
-            return sb.toString();
+        if (gantt.isEmpty()) return "\nDIAGRAMA DE GANTT\n\n(sin ejecuciones)\n";
+
+        // Agrupar unidades consecutivas del mismo proceso
+        List<String>  nombres = new ArrayList<>();
+        List<Integer> inicios = new ArrayList<>();
+        List<Integer> fines   = new ArrayList<>();
+
+        String act = gantt.get(0);
+        int ini = 0;
+        for (int i = 1; i <= gantt.size(); i++) {
+            if (i == gantt.size() || !gantt.get(i).equals(act)) {
+                nombres.add(act);
+                inicios.add(ini);
+                fines.add(i);
+                if (i < gantt.size()) {
+                    act = gantt.get(i);
+                    ini = i;
+                }
+            }
         }
 
-        // Ancho fijo por celda, para que TODOS los "|" queden alineados
-        int maxLen = 4; // mínimo para "IDLE"
-        for (int i = 0; i < administrador.getCantidad(); i++) {
-            int l = administrador.getProceso(i).getNombre().length();
-            if (l > maxLen) maxLen = l;
-        }
-        // Celda = "| " + nombre + relleno  → ancho = maxLen + 3
-        // Con nombres "P1".."P4": maxLen=2 → ancho=5 ("| P1 ")
-        int ancho = maxLen + 3;
+        // Ancho uniforme por celda para alinear los "|"
+        int maxLen = 4; // "IDLE"
+        for (String s : nombres) if (s.length() > maxLen) maxLen = s.length();
+        int ancho = maxLen + 3;  // "| " + nombre + relleno
 
-        // ---------- Barra ----------
+        // Barra de procesos
         StringBuilder barra = new StringBuilder();
-        for (int[] seg : segmentos) {
-            String nombre = (seg[0] == -1)
-                    ? "IDLE"
-                    : administrador.getProceso(seg[0]).getNombre();
-
-            String celda = "| " + nombre;
+        for (String s : nombres) {
+            String celda = "| " + s;
             while (celda.length() < ancho) celda += " ";
             barra.append(celda);
         }
         barra.append("|");
 
-        // ---------- Números alineados ----------
-        // El i-ésimo pipe está en la posición i * ancho
-        // Ponemos el número i justo debajo de ese pipe
+        // Números alineados justo debajo de cada "|"
         StringBuilder nums = new StringBuilder();
-        int totalPipes = segmentos.size() + 1;
-        for (int i = 0; i < totalPipes; i++) {
+        for (int i = 0; i <= nombres.size(); i++) {
             int pos = i * ancho;
             while (nums.length() < pos) nums.append(' ');
-            nums.append(i);
+            nums.append(i < inicios.size() ? inicios.get(i) : tiempo);
         }
 
-        sb.append(barra).append("\n");
-        sb.append(nums).append("\n");
-
-        return sb.toString();
+        return "\nDIAGRAMA DE GANTT\n\n" + barra + "\n" + nums + "\n";
     }
 
-    // -----------------------------
-    // MOSTRAR RESULTADOS
-    // -----------------------------
+    // =========================================================
+    // RESULTADOS
+    // =========================================================
     public String mostrarResultados() {
+
         StringBuilder sb = new StringBuilder();
         sb.append("\nRESULTADOS DE SJF\n\n");
-
         sb.append(String.format("%-6s %-9s %-8s %-6s %-8s %-8s%n",
                 "PID", "Llegada", "Ráfaga", "Fin", "Espera", "Retorno"));
 
-        double esperaPromedio = 0;
-        double retornoPromedio = 0;
+        int n = admin.getCantidad();
+        double sumaE = 0, sumaR = 0;
 
-        for (int i = 0; i < administrador.getCantidad(); i++) {
-            Proceso p = administrador.getProceso(i);
+        for (int i = 0; i < n; i++) {
+            Proceso p = admin.getProceso(i);
             sb.append(String.format("%-6s %-9d %-8d %-6d %-8d %-8d%n",
-                    p.getNombre(),
-                    p.getLlegada(),
-                    p.getRafaga(),
-                    p.getFin(),
-                    p.getEspera(),
-                    p.getRetorno()));
-            esperaPromedio += p.getEspera();
-            retornoPromedio += p.getRetorno();
+                    p.getNombre(), p.getLlegada(), p.getRafaga(),
+                    p.getFin(), p.getEspera(), p.getRetorno()));
+            sumaE += p.getEspera();
+            sumaR += p.getRetorno();
         }
 
-        int n = administrador.getCantidad();
         if (n > 0) {
-            esperaPromedio /= n;
-            retornoPromedio /= n;
+            sb.append(String.format("%nPromedio de espera:  %.2f%n", sumaE / n));
+            sb.append(String.format("Promedio de retorno: %.2f%n", sumaR / n));
         }
-
-        sb.append(String.format("%nPromedio de espera: %.2f%n", esperaPromedio));
-        sb.append(String.format("Promedio de retorno: %.2f%n", retornoPromedio));
-
         return sb.toString();
     }
 
-    public int getTiempo() {
-        return tiempo;
-    }
+    public int getTiempo() { return tiempo; }
 }

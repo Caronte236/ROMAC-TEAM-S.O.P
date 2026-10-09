@@ -49,20 +49,24 @@ public class Prueba {
         // ==========================================
 
         Proceso p1 = administrador.crearProceso(
-                "P1", false, 0, 8
+                "P1", false, 0, 25
         );
 
         Proceso p2 = administrador.crearProceso(
-                "P2", false, 1, 4
+                "P2", false, 7, 4
         );
 
         Proceso p3 = administrador.crearProceso(
-                "P3", false, 2, 9
+                "P3", false, 2, 12
         );
 
         Proceso p4 = administrador.crearProceso(
-                "P4", false, 3, 5
+                "P4", false, 4, 10
         );
+        Proceso p5 = administrador.crearProceso(
+                "P5", false, 6, 20
+        );
+      
 
         // ==========================================
         // CREAR USUARIO (como en Kernel.main)

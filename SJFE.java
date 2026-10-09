@@ -161,7 +161,6 @@ public class SJFE {
 
         if (n > 0) {
             sb.append(String.format("%nPromedio de espera:  %.2f%n", sumaE / n));
-            sb.append(String.format("Promedio de retorno: %.2f%n", sumaR / n));
         }
         return sb.toString();
     }

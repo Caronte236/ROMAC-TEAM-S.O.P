@@ -36,17 +36,6 @@ public class Prueba {
         AdministradorProcesos administrador =
                 new AdministradorProcesos(10);
 
-        // Administrador independiente para las transiciones manuales.
-        // Asi no se mezclan con los procesos que utiliza SJF.
-        AdministradorProcesos administradorManual =
-                new AdministradorProcesos(10);
-
-        administradorManual.crearProceso("P1", false, 0, 7);
-        administradorManual.crearProceso("P2", false, 2, 4);
-        administradorManual.crearProceso("P3", false, 4, 1);
-        administradorManual.crearProceso("P4", false, 5, 4);
-        administradorManual.crearProceso("P5", false, 6, 2);
-
         // ==========================================
         // CREAR PROCESOS
         // ==========================================
@@ -176,9 +165,11 @@ public class Prueba {
             crear_proc    - Crea un nuevo proceso
             eliminar_proc - Elimina un proceso por PID
             sjf           - Ejecutar planificador SJF expropiativo
-            transicion    - Simular transiciones manuales
             memoria       - Información de memoria
             archivos      - Sistema de archivos
+            transicion    - Simular transiciones de procesos
+            estados       - Consultar estados actuales
+            historial     - Consultar historial de procesos
             cmuser        - Cambiar nombre de usuario
             cmpass        - Cambiar password
             cerrar        - Cerrar sesión
@@ -413,10 +404,6 @@ public class Prueba {
 
                     break;
 
-                case "transicion":
-                    simularTransicion(administradorManual, sc);
-                    break;
-
                 case "memoria":
 
                     System.out.println(memoria.mostrarMemoria());
@@ -425,6 +412,21 @@ public class Prueba {
                 case "archivos":
 
                     mostrarArchivos();
+                    break;
+
+                case "transicion":
+
+                    simularTransicion(administrador, sc);
+                    break;
+
+                case "estados":
+
+                    mostrarEstados(administrador);
+                    break;
+
+                case "historial":
+
+                    consultarHistorialProcesos(administrador, sc);
                     break;
 
                 case "cerrar":
@@ -595,149 +597,237 @@ public class Prueba {
 
 
     // ==========================================
-    // SIMULADOR MANUAL DE TRANSICIONES
+    // CONSULTAR ESTADOS ACTUALES
     // ==========================================
 
-    public static void simularTransicion(AdministradorProcesos admin, Scanner sc) {
-        int tiempo = 0;
-        boolean salirSimulacion = false;
-
-        while (!salirSimulacion) {
-            System.out.println("\n===== TRANSICIONES DE PROCESOS =====");
-            mostrarEstados(admin);
-
-            System.out.println("\n1. Realizar una transicion");
-            System.out.println("2. Consultar historial de un proceso");
-            System.out.println("3. Salir");
-            System.out.print("Selecciona una opcion: ");
-            String opcion = sc.nextLine();
-
-            if (opcion.equals("3")) {
-                salirSimulacion = true;
-                continue;
-            }
-
-            if (opcion.equals("2")) {
-                System.out.print("Numero del proceso: ");
-                int seleccion;
-                try {
-                    seleccion = Integer.parseInt(sc.nextLine()) - 1;
-                } catch (NumberFormatException e) {
-                    System.out.println("Entrada invalida.");
-                    continue;
-                }
-                if (seleccion < 0 || seleccion >= admin.getCantidad()) {
-                    System.out.println("El proceso no existe.");
-                    continue;
-                }
-                Proceso p = admin.getProceso(seleccion);
-                System.out.println("\nHistorial de " + p.getNombre() + ":");
-                System.out.println(p.getHistorial());
-                System.out.print("Presiona ENTER para continuar...");
-                sc.nextLine();
-                continue;
-            }
-
-            if (!opcion.equals("1")) {
-                System.out.println("Opcion no valida.");
-                continue;
-            }
-
-            System.out.print("Numero del proceso: ");
-            int seleccion;
-            try {
-                seleccion = Integer.parseInt(sc.nextLine()) - 1;
-            } catch (NumberFormatException e) {
-                System.out.println("Entrada invalida.");
-                continue;
-            }
-            if (seleccion < 0 || seleccion >= admin.getCantidad()) {
-                System.out.println("El proceso no existe.");
-                continue;
-            }
-
-            Proceso p = admin.getProceso(seleccion);
-            System.out.println("Proceso: " + p.getNombre());
-            System.out.println("Estado actual: " + p.getEstado());
-            System.out.println("\nTransiciones disponibles:");
-            System.out.println("1. Nuevo -> Listo");
-            System.out.println("2. Listo -> Ejecutando");
-            System.out.println("3. Interrumpir: Ejecutando -> Listo");
-            System.out.println("4. Ejecutando -> Espera");
-            System.out.println("5. Ejecutando -> Terminado");
-            System.out.println("6. Espera -> Listo");
-            System.out.print("Elige una transicion: ");
-            String accion = sc.nextLine();
-            tiempo++;
-
-            switch (accion) {
-                case "1":
-                    if (p.getEstado() == Proceso.estado.nuevo) {
-                        p.pasarAListo(tiempo);
-                    } else {
-                        System.out.println("Transicion no permitida: debe estar nuevo.");
-                    }
-                    break;
-                case "2":
-                    if (p.getEstado() == Proceso.estado.listo) {
-                        p.ejecutar(tiempo);
-                    } else {
-                        System.out.println("Transicion no permitida: debe estar listo.");
-                    }
-                    break;
-                case "3":
-                    if (p.getEstado() == Proceso.estado.ejecutando) {
-                        p.regresarAListo(tiempo);
-                        System.out.println("Interrupcion manual realizada.");
-                    } else {
-                        System.out.println("Solo se puede interrumpir un proceso ejecutando.");
-                    }
-                    break;
-                case "4":
-                    if (p.getEstado() == Proceso.estado.ejecutando) {
-                        p.ponerEnEspera(tiempo);
-                    } else {
-                        System.out.println("Transicion no permitida: debe estar ejecutando.");
-                    }
-                    break;
-                case "5":
-                    if (p.getEstado() == Proceso.estado.ejecutando) {
-                        while (!p.haTerminado()) {
-                            p.ejecutarUnidad();
-                        }
-                        p.terminar(tiempo);
-                    } else {
-                        System.out.println("Transicion no permitida: debe estar ejecutando.");
-                    }
-                    break;
-                case "6":
-                    if (p.getEstado() == Proceso.estado.espera) {
-                        p.pasarAListo(tiempo);
-                    } else {
-                        System.out.println("Transicion no permitida: debe estar en espera.");
-                    }
-                    break;
-                default:
-                    System.out.println("Opcion no valida.");
-                    break;
-            }
-
-            System.out.println("\nEstados actualizados de todos los procesos:");
-            mostrarEstados(admin);
-            System.out.print("Presiona ENTER para continuar...");
-            sc.nextLine();
+    public static void mostrarEstados(AdministradorProcesos admin) {
+        System.out.println("\n========== ESTADO DE LOS PROCESOS ==========");
+        for (int i = 0; i < admin.getCantidad(); i++) {
+            Proceso p = admin.getProceso(i);
+            System.out.println(p.getNombre() + " | PID: "
+                    + p.getPID() + " | Estado: " + p.getEstado());
         }
-        System.out.println("Simulador de transiciones finalizado.");
+        System.out.println("============================================");
     }
 
-    public static void mostrarEstados(AdministradorProcesos admin) {
-        System.out.println("\n---------- ESTADO DE CADA PROCESO ----------");
+    // ==========================================
+    // CONSULTAR HISTORIAL DE CADA PROCESO
+    // ==========================================
+
+    public static void consultarHistorialProcesos(
+            AdministradorProcesos admin, Scanner sc) {
+
+        System.out.println("\n========== HISTORIAL DE PROCESOS ==========");
+
         for (int i = 0; i < admin.getCantidad(); i++) {
             Proceso p = admin.getProceso(i);
             System.out.println((i + 1) + ". " + p.getNombre()
                     + " | PID: " + p.getPID()
-                    + " | Estado: " + p.getEstado());
+                    + " | Estado actual: " + p.getEstado());
         }
-        System.out.println("--------------------------------------------");
+
+        System.out.println("0. Regresar");
+        System.out.print("Selecciona el proceso para ver su historial: ");
+
+        int seleccion;
+        try {
+            seleccion = Integer.parseInt(sc.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Debes escribir un número.");
+            return;
+        }
+
+        if (seleccion == 0) {
+            return;
+        }
+
+        if (seleccion < 1 || seleccion > admin.getCantidad()) {
+            System.out.println("Selección no válida.");
+            return;
+        }
+
+        Proceso p = admin.getProceso(seleccion - 1);
+        System.out.println("\n========== HISTORIAL DE " + p.getNombre() + " ==========");
+        System.out.println(p.getHistorial());
+        System.out.println("Estado actual: " + p.getEstado());
+        System.out.println("================================================");
     }
+
+    // ==========================================
+    // SIMULADOR MANUAL DE TRANSICIONES
+    // ==========================================
+
+    public static void simularTransicion(
+            AdministradorProcesos admin, Scanner sc) {
+
+        int tiempo = 0;
+        boolean regresar = false;
+
+        while (!regresar) {
+            System.out.println("\n===== SIMULADOR DE TRANSICIONES =====");
+            System.out.println("1. Seleccionar proceso");
+            System.out.println("2. Consultar estados");
+            System.out.println("3. Consultar historial de procesos");
+            System.out.println("0. Regresar al sistema");
+            System.out.print("Opción: ");
+
+            String opcion = sc.nextLine();
+
+            switch (opcion) {
+                case "1": {
+                    System.out.println("\n===== SELECCIONAR PROCESO =====");
+                    for (int i = 0; i < admin.getCantidad(); i++) {
+                        Proceso proceso = admin.getProceso(i);
+                        System.out.println((i + 1) + ". "
+                                + proceso.getNombre() + " | PID: "
+                                + proceso.getPID() + " | Estado: "
+                                + proceso.getEstado());
+                    }
+                    System.out.println("0. Regresar");
+                    System.out.print("Selecciona un proceso: ");
+
+                    int seleccion;
+                    try {
+                        seleccion = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Debes escribir un número.");
+                        break;
+                    }
+
+                    if (seleccion == 0) {
+                        break;
+                    }
+
+                    if (seleccion < 1 || seleccion > admin.getCantidad()) {
+                        System.out.println("Selección no válida.");
+                        break;
+                    }
+
+                    Proceso p = admin.getProceso(seleccion - 1);
+                    boolean volverMenu = false;
+
+                    while (!volverMenu) {
+                        System.out.println("\nProceso: " + p.getNombre()
+                                + " | Estado actual: " + p.getEstado());
+                        System.out.println("1. Nuevo -> Listo");
+                        System.out.println("2. Listo -> Ejecutando");
+                        System.out.println("3. Ejecutando -> Listo (interrumpir)");
+                        System.out.println("4. Ejecutando -> Espera");
+                        System.out.println("5. Espera -> Listo");
+                        System.out.println("6. Ejecutando -> Terminado");
+                        System.out.println("7. Ver historial de este proceso");
+                        System.out.println("0. Volver a seleccionar proceso");
+                        System.out.print("Opción: ");
+
+                        String trans = sc.nextLine();
+
+                        switch (trans) {
+                            case "1":
+                                if (p.getEstado() == Proceso.estado.nuevo) {
+                                    p.pasarAListo(tiempo++);
+                                    System.out.println("Transición realizada.");
+                                } else {
+                                    System.out.println("El proceso debe estar en estado nuevo.");
+                                }
+                                break;
+
+                            case "2": {
+                                if (p.getEstado() != Proceso.estado.listo) {
+                                    System.out.println("El proceso debe estar en estado listo.");
+                                    break;
+                                }
+
+                                // Solo un proceso puede estar ejecutando.
+                                // El que estaba ejecutando pasa a espera.
+                                Proceso actual = null;
+                                for (int i = 0; i < admin.getCantidad(); i++) {
+                                    Proceso otro = admin.getProceso(i);
+                                    if (otro.getEstado() == Proceso.estado.ejecutando) {
+                                        actual = otro;
+                                        break;
+                                    }
+                                }
+
+                                if (actual != null && actual != p) {
+                                    actual.ponerEnEspera(tiempo++);
+                                    System.out.println(actual.getNombre()
+                                            + " pasó a espera.");
+                                }
+
+                                p.ejecutar(tiempo++);
+                                System.out.println(p.getNombre()
+                                        + " pasó a ejecutando.");
+                                break;
+                            }
+
+                            case "3":
+                                if (p.getEstado() == Proceso.estado.ejecutando) {
+                                    p.regresarAListo(tiempo++);
+                                    System.out.println("Transición realizada.");
+                                } else {
+                                    System.out.println("El proceso debe estar ejecutando.");
+                                }
+                                break;
+
+                            case "4":
+                                if (p.getEstado() == Proceso.estado.ejecutando) {
+                                    p.ponerEnEspera(tiempo++);
+                                    System.out.println("Transición realizada.");
+                                } else {
+                                    System.out.println("El proceso debe estar ejecutando.");
+                                }
+                                break;
+
+                            case "5":
+                                if (p.getEstado() == Proceso.estado.espera) {
+                                    p.pasarAListo(tiempo++);
+                                    System.out.println("Transición realizada.");
+                                } else {
+                                    System.out.println("El proceso debe estar en espera.");
+                                }
+                                break;
+
+                            case "6":
+                                if (p.getEstado() == Proceso.estado.ejecutando) {
+                                    p.terminar(tiempo++);
+                                    System.out.println("Proceso terminado.");
+                                } else {
+                                    System.out.println("El proceso debe estar ejecutando.");
+                                }
+                                break;
+
+                            case "7":
+                                System.out.println("\nHistorial de " + p.getNombre() + ":");
+                                System.out.println(p.getHistorial());
+                                break;
+
+                            case "0":
+                                volverMenu = true;
+                                break;
+
+                            default:
+                                System.out.println("Opción no válida.");
+                        }
+                    }
+                    break;
+                }
+
+                case "2":
+                    mostrarEstados(admin);
+                    break;
+
+                case "3":
+                    consultarHistorialProcesos(admin, sc);
+                    break;
+
+                case "0":
+                    regresar = true;
+                    break;
+
+                default:
+                    System.out.println("Opción no válida.");
+            }
+        }
+    }
+
 }
